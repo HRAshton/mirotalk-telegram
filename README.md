@@ -1,3 +1,54 @@
+# MiroTalk with autojoin
+
+For my own personal use only; notes how to deploy:
+
+- Clone the repo
+- Edit .env.template, set HOST=yourdomain.com
+- Edit config.template.js, set language
+- Run `podman build -t docker.io/hrashton/mt:latest -t docker.io/hrashton/mt:<SETVERSION> .`
+- Run `docker run -p 127.0.0.1:3000:3000 -d --restart on-failure:3 docker.io/hrashton/mt:<SETVERSION>`
+- Update DNS (ex. freedns.afraid.org)
+- Update firewall (ufw allow 443)
+- Install nginx, use the config nearby (don't forget to include it in sites-enabled)
+- Install certbot, run `certbot --nginx -d yourdomain.com` to get a cert
+- Test it out!
+
+```text
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+
+    location = / {
+        return 403;
+    }
+
+    location = /join {
+        return 403;
+    }
+
+    location ~ ^/join/(?!♥) {
+        return 403;
+    }
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+        proxy_pass http://localhost:3000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+---
+
+Original readme:
+
 <h1 align="center">MiroTalk P2P</h1>
 
 <br />
