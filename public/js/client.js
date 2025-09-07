@@ -1489,6 +1489,7 @@ async function getButtons() {
  * @returns {string} Peer Name
  */
 async function getUserName() {
+    return window.telegramPatch.getUserName();
     try {
         const { data: profile } = await axios.get('/profile', { timeout: 5000 });
         if (profile && profile.name) {
@@ -1524,6 +1525,13 @@ async function whoAreYou() {
         whoAreYouJoin();
         playSound('addPeer');
         return;
+    }
+
+    try {
+        const handled = await window.telegramPatch.autojoin();
+        if (handled) return;
+    } catch (err) {
+        console.error('Auto join delegation failed', err);
     }
 
     playSound('newMessage');
